@@ -19,9 +19,6 @@
 </template>
 <script>
 export default {
-  mounted () {
-    this.onloadFunc()
-  },
   data () {
     return {
       thunderTotalNum: 0,
@@ -53,15 +50,11 @@ export default {
       }
     }
   },
+  mounted () {
+    this.onloadFunc()
+  },
   methods: {
     onloadFunc () {
-      // let arr = []
-      // 用随机数生成10个随机的地雷id
-      // for (let i = 0; i < 10; i++) {
-      //   let id = Math.floor(Math.random() * 100)
-      //   arr.push(id)
-      // }
-      // this.thunerArr = arr
       // 地雷数
       this.thunerArr = this.createThunder()
       // 生成一个默认的雷盘
@@ -90,18 +83,31 @@ export default {
       }
       console.log(defThunder);
       // 查找周围雷的个数
-      for (let r = 1; r < row - 1; r++) {
-        for (let c = 1; c < col - 1; c++) {
-          if (col[c] === -1) {
+      for (let tr = 0; tr < row; tr++) {
+        for (let tc = 0; tc < col; tc++) {
+
+          if (defThunder[tr][tc] === -1) {
+            console.log(defThunder[tr][tc]);
             // 如果当前是雷 则周围9个框数字加1
             // 上一行数字操作
             let id = 3
             // 下标 从右到左 因为一开始就执行自减 所以要多加1
-            let thSubScript = c + 2
-            for (let i = 0; i < id; i++) {
-              // 上一行 如果当前项为地雷 则不进行操作
-              if (defThunder[r - 1][thSubScript--] !== -1) {
-                defThunder[r - 1][thSubScript--]++
+            // 下标规则 如果是列的最后一位 就只需要加一即可
+            let thSubScript = tc === 9 ? tc + 1 : tc + 2
+            if (tr > 0) {
+              for (let ti = 0; ti < id; ti++) {
+                // 上一行 并且不是第一行
+                // 如果当前项为地雷 则不进行操作 注意 -- 运算符是先赋值再减减
+                thSubScript--
+                let sty = thSubScript
+                if (defThunder[tr - 1][sty] !== -1) {
+                  //  如果是列的第一行 则当sty(横坐标不等于雷的横坐标才进行操作)
+                  // do {
+                  //   defThunder[tr - 1][sty]++
+                  // } while (!(tc === 0 && sty === thSubScript));
+                  // console.log(defThunder[tr - 1][thSubScript--]);
+                }
+                // 处理
               }
             }
           }
