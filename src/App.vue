@@ -10,8 +10,11 @@
         <div class="innerbox"
              :data-id='returnId(indexO,index)'
              v-for="(item, index) in 10"
-             :key="index">
-          {{defThunderArr[indexO][index]}}
+             :key="index"
+             @click="thunderClick(defThunderArr[indexO][index])">
+          <div class="thenderIcon"
+               v-if="defThunderArr[indexO][index]===-1"></div>
+          <div v-else>{{defThunderArr[indexO][index]}}</div>
         </div>
       </div>
     </div>
@@ -134,12 +137,12 @@ export default {
             // 左右 
 
             if (tc === 0) {
-              defThunder[tr][tc + 1]++
-            } else if (tc === 9) {
-              defThunder[tr][tc - 1]++
+              defThunder[tr][tc + 1] == -1 ? '' : defThunder[tr][tc + 1]++
+            } else if (tc === (col - 1)) {
+              defThunder[tr][tc - 1] == -1 ? '' : defThunder[tr][tc - 1]++
             } else {
-              defThunder[tr][tc - 1]++
-              defThunder[tr][tc + 1]++
+              defThunder[tr][tc - 1] == -1 ? '' : defThunder[tr][tc - 1]++
+              defThunder[tr][tc + 1] == -1 ? '' : defThunder[tr][tc + 1]++
             }
           }
         }
@@ -239,6 +242,12 @@ body,
     box-sizing: border-box;
     &.isthunder {
       background-color: #000;
+    }
+    .thenderIcon {
+      width: 100%;
+      height: 100%;
+      background: url("../src/assets/thunderBuild.svg") center center no-repeat;
+      background-size: 10px 10px;
     }
   }
 }
