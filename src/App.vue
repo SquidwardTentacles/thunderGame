@@ -92,20 +92,21 @@ export default {
             // 上一行数字操作
             let id = 3
             // 下标 从右到左 因为一开始就执行自减 所以要多加1
-            // 下标规则 如果是列的最后一位 就只需要加一即可
+            // 下标规则 如果是列的最后一位 就只需要加一即可 对于雷是列的最后一个进行的判断
             let thSubScript = tc === 9 ? tc + 1 : tc + 2
             if (tr > 0) {
+              // debugger
               for (let ti = 0; ti < id; ti++) {
                 // 上一行 并且不是第一行
                 // 如果当前项为地雷 则不进行操作 注意 -- 运算符是先赋值再减减
                 thSubScript--
+                // sty上一行的数组下标
                 let sty = thSubScript
                 if (defThunder[tr - 1][sty] !== -1) {
-                  //  如果是列的第一行 则当sty(横坐标不等于雷的横坐标才进行操作)
-                  // do {
-                  //   defThunder[tr - 1][sty]++
-                  // } while (!(tc === 0 && sty === thSubScript));
-                  // console.log(defThunder[tr - 1][thSubScript--]);
+                  //  如果是列的第一行 则当sty(横坐标不等于雷的横坐标才进行操作) 对于雷是列的第一个进行的判断
+                  if (tc !== 0 || sty !== (tc - 1)) {
+                    defThunder[tr - 1][sty]++
+                  }
                 }
                 // 处理
               }
