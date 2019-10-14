@@ -8,13 +8,16 @@
 
         <!-- :class="{'isthunder':isthunderFunc(index)}" -->
         <div class="innerbox"
-             :data-id='returnId(indexO,index)'
              v-for="(item, index) in 10"
              :key="index"
-             @click="thunderClick(defThunderArr[indexO][index])">
+             @click="thunderClick(indexO,index)">
           <div class="thenderIcon"
-               v-if="defThunderArr[indexO][index]===-1"></div>
-          <div v-else>{{defThunderArr[indexO][index]}}</div>
+               v-if="defThunderArr[indexO][index].thunderid===-1"></div>
+          <div v-else>{{defThunderArr[indexO][index].thunderid}}</div>
+          <!-- 上层遮罩 -->
+          <div class="cover-box"
+               @contextmenu.prevent='rightClick'
+               v-if="defThunderArr[indexO][index].coverShow"></div>
         </div>
       </div>
     </div>
@@ -27,7 +30,11 @@ export default {
       thunderTotalNum: 0,
       thunerArr: [],
       num2: 0,
-      defThunderArr: []
+      defThunderArr: [],
+      coverHiddenArr: [],
+      row: 10,
+      col: 10,
+      click: 0
     }
   },
   watch: {
@@ -36,21 +43,14 @@ export default {
     }
   },
   computed: {
-    // isthunderFunc () {
-    //   return (index) => {
-    //     for (let i = 0; i < this.thunerArr.length; i++) {
-    //       if (this.thunerArr[i] === index) {
-    //         return true
-    //       }
-    //     }
-    //     return false
-    //   }
-    // },
-    returnId () {
-      // let fa = String(fi),
-      //   sei = String(si)
-      return (fi, si) => {
-        return String(fi) + String(si)
+    // 控制遮罩层是否显示
+    coverShow () {
+      return (x, y) => {
+        let clickXY = String(x) + String(y)
+        if (this.coverHiddenArr.length === 0) return true
+        this.coverHiddenArr.map((currentValue) => {
+          return currentValue === clickXY
+        })
       }
     }
   },
@@ -69,7 +69,8 @@ export default {
         let arr = []
         defThunder.push(arr)
         for (let c = 0; c < col; c++) {
-          defThunder[r].push(0)
+          let obj = { thunderid: 0, coverShow: true }
+          defThunder[r].push(obj)
         }
       }
       // 将地雷填充到雷盘
@@ -82,13 +83,13 @@ export default {
         } else {
           ty = parseInt(thunderId.slice(0, 1))
         }
-        defThunder[tx][ty] = -1
+        defThunder[tx][ty].thunderid = -1
       }
       // 查找周围雷的个数
       for (let tr = 0; tr < row; tr++) {
         for (let tc = 0; tc < col; tc++) {
           // 如果当前项是雷
-          if (defThunder[tr][tc] === -1) {
+          if (defThunder[tr][tc].thunderid === -1) {
             // 如果当前是雷 则周围9个框数字加1
             // 上一行数字操作
             let id = 3
@@ -105,10 +106,12 @@ export default {
                 thSubScript--
                 // sty上一行的数组下标
                 let sty = thSubScript
-                if (defThunder[tr - 1][sty] !== -1) {
-                  //  如果是列的第一行 则当sty(横坐标不等于雷的横坐标才进行操作) 对于雷是列的第一个进行的判断
-                  if (tc !== 0 || sty !== (tc - 1)) {
-                    defThunder[tr - 1][sty]++
+                if (sty >= 0) {
+                  if (defThunder[tr - 1][sty].thunderid !== -1) {
+                    //  如果是列的第一行 则当sty(横坐标不等于雷的横坐标才进行操作) 对于雷是列的第一个进行的判断
+                    if (tc !== 0 || sty !== (tc - 1)) {
+                      defThunder[tr - 1][sty].thunderid++
+                    }
                   }
                 }
               }
@@ -128,8 +131,8 @@ export default {
                 underSubScriper--
                 let underId = underSubScriper
                 // 如果是雷就不进行操作
-                if (defThunder[tr + 1][underId] !== -1) {
-                  defThunder[tr + 1][underId]++
+                if (defThunder[tr + 1][underId].thunderid !== -1) {
+                  defThunder[tr + 1][underId].thunderid++
                 }
               }
             }
@@ -137,17 +140,19 @@ export default {
             // 左右 
 
             if (tc === 0) {
-              defThunder[tr][tc + 1] == -1 ? '' : defThunder[tr][tc + 1]++
+              defThunder[tr][tc + 1].thunderid == -1 ? '' : defThunder[tr][tc + 1].thunderid++
             } else if (tc === (col - 1)) {
-              defThunder[tr][tc - 1] == -1 ? '' : defThunder[tr][tc - 1]++
+              defThunder[tr][tc - 1].thunderid == -1 ? '' : defThunder[tr][tc - 1].thunderid++
             } else {
-              defThunder[tr][tc - 1] == -1 ? '' : defThunder[tr][tc - 1]++
-              defThunder[tr][tc + 1] == -1 ? '' : defThunder[tr][tc + 1]++
+              defThunder[tr][tc - 1].thunderid == -1 ? '' : defThunder[tr][tc - 1].thunderid++
+              defThunder[tr][tc + 1].thunderid == -1 ? '' : defThunder[tr][tc + 1].thunderid++
             }
           }
         }
       }
       this.defThunderArr = defThunder
+      console.log(defThunder);
+
     },
     // 生成炸弹
     createThunder () {
@@ -173,6 +178,59 @@ export default {
         this.thunerArr.push(dataArr[i])
       }
       return this.thunerArr
+    },
+    thunderClick (x, y) {
+      this.defThunderArr[x][y].coverShow = false
+      this.otherShow(x, y)
+    },
+    otherShow (x, y) {
+      // 如果当前项是雷 则显示所有
+      if (this.defThunderArr[x][y].thunderid === -1) {
+        this.defThunderArr.map((cur) => {
+          cur.map((curi) => {
+            curi.coverShow = false
+          })
+        })
+      } else {
+        if (this.click === 1) return
+        // 显示相邻的20个不为雷的格子 声明显示位置的xy坐标 
+        let showX = (x - 2) < 0 ? 0 : x
+        showX = (showX + 2) > this.row ? this.row : showX
+        let showY = (y - 2) < 0 ? 0 : y
+        showY = (showY + 3) > this.col ? this.col : showY
+        let isThunder = 0
+        for (let x = showX; x < (showX + 4); x++) {
+          for (let y = showY; y < (showY + 5); y++) {
+            if (this.defThunderArr[x][y].thunderid !== -1) {
+              this.defThunderArr[x][y].coverShow = false
+            } else {
+              isThunder++
+            }
+          }
+        }
+
+        isThunder = isThunder > 0 ? isThunder : isThunder + 3
+        // if (isThunder > 0) {
+        // 附加循环的x坐标
+        let addForX = 0
+        addForX = (showX + 4) >= this.row ? showX - 1 : showX + 4
+        // let addForY = 0
+        for (let i = 0; i < isThunder; i++) {
+          let elAddfor = this.defThunderArr[addForX][showY++]
+          if (elAddfor !== -1) {
+            elAddfor.coverShow = false
+          } else {
+            i = i - 1
+          }
+        }
+        // }
+        // 只允许调用一次显示多个的事件
+        this.click++
+      }
+    },
+    rightClick () {
+      console.log('右键');
+
     }
   }
 }
@@ -234,6 +292,7 @@ body,
   transform: translate(-50%, -50%);
   background-color: #fff;
   .innerbox {
+    position: relative;
     width: 50px;
     height: 50px;
     line-height: 50px;
@@ -248,6 +307,14 @@ body,
       height: 100%;
       background: url("../src/assets/thunderBuild.svg") center center no-repeat;
       background-size: 10px 10px;
+    }
+    .cover-box {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #ccc;
     }
   }
 }
