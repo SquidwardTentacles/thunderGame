@@ -69,7 +69,6 @@ export default {
           defThunder[r].push(0)
         }
       }
-      console.log(defThunder);
       // 将地雷填充到雷盘
       for (let i = 0; i < this.thunerArr.length; i++) {
         let thunderId = String(this.thunerArr[i])
@@ -82,13 +81,11 @@ export default {
         }
         defThunder[tx][ty] = -1
       }
-      console.log(defThunder);
       // 查找周围雷的个数
       for (let tr = 0; tr < row; tr++) {
         for (let tc = 0; tc < col; tc++) {
           // 如果当前项是雷
           if (defThunder[tr][tc] === -1) {
-            console.log(defThunder[tr][tc]);
             // 如果当前是雷 则周围9个框数字加1
             // 上一行数字操作
             let id = 3
@@ -123,20 +120,22 @@ export default {
             underSubFor = tc === colid ? 2 : underSubFor
             // 如果是最后一行就不进行操作
             let forRow = row - 1
-            if (tr === forRow) return
-            for (let i = 0; i < underSubFor; i++) {
-              underSubScriper--
-              let underId = underSubScriper
-              // 如果是雷就不进行操作
-              if (defThunder[tr + 1][underId] !== -1) {
-                defThunder[tr + 1][underId]++
+            if (tr !== forRow) {
+              for (let i = 0; i < underSubFor; i++) {
+                underSubScriper--
+                let underId = underSubScriper
+                // 如果是雷就不进行操作
+                if (defThunder[tr + 1][underId] !== -1) {
+                  defThunder[tr + 1][underId]++
+                }
               }
             }
             // -----------------------
             // 左右 
+
             if (tc === 0) {
               defThunder[tr][tc + 1]++
-            } else if (tc === (col.length - 1)) {
+            } else if (tc === 9) {
               defThunder[tr][tc - 1]++
             } else {
               defThunder[tr][tc - 1]++
@@ -145,7 +144,6 @@ export default {
           }
         }
       }
-      console.log(defThunder);
       this.defThunderArr = defThunder
     },
     // 生成炸弹
