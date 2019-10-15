@@ -385,6 +385,7 @@ body,
     .thenderIcon {
       width: 100%;
       height: 100%;
+      // 地雷图标
       background: url("../src/assets/thunderBuild.svg") center center no-repeat;
       background-size: 10px 10px;
     }
@@ -396,6 +397,7 @@ body,
       left: 0;
       background-color: #ccc;
       &.flagStyle {
+        // 右键标记图标
         background: url("./assets/旗子.svg") center center no-repeat #ccc;
         background-size: 10px 10px;
       }
