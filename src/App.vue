@@ -176,8 +176,6 @@ export default {
         }
       }
       this.defThunderArr = defThunder
-      console.log(defThunder);
-
     },
     // 生成炸弹
     createThunder () {
@@ -229,11 +227,9 @@ export default {
           })
         })
       }
-      console.log(thunderNum, this.thunderNum);
+
     },
     otherShow (x, y) {
-      console.log('click');
-
       // 如果当前项是雷 则显示所有
       if (this.defThunderArr[x][y].thunderid === -1) {
         this.overPopup = false
@@ -276,9 +272,6 @@ export default {
             i = i - 1
           }
         }
-        console.log(this.showboxNum);
-
-        // }
         // 只允许调用一次显示多个的事件
         this.click++
       }
