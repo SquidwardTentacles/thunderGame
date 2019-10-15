@@ -1,24 +1,33 @@
 <template>
   <div id="app">
 
+    <p>剩下地雷数：{{hasThunderNum}}</p>
     <div class="thunder">
-      <div v-for="(item, indexO) in defThunderArr"
-           :key="indexO"
-           class="flexbox">
-
-        <!-- :class="{'isthunder':isthunderFunc(index)}" -->
-        <div class="innerbox"
-             v-for="(item, index) in 10"
-             :key="index"
-             @click="thunderClick(indexO,index)">
-          <div class="thenderIcon"
-               v-if="defThunderArr[indexO][index].thunderid===-1"></div>
-          <div v-else>{{defThunderArr[indexO][index].thunderid}}</div>
-          <!-- 上层遮罩 -->
-          <div class="cover-box"
-               @contextmenu.prevent='rightClick'
-               v-if="defThunderArr[indexO][index].coverShow"></div>
+      <div class="thunder-block">
+        <div v-for="(item, indexO) in defThunderArr"
+             :key="indexO"
+             class="flexbox">
+          <!-- :class="{'isthunder':isthunderFunc(index)}" -->
+          <div class="innerbox"
+               v-for="(item, index) in 10"
+               :key="index"
+               @click="thunderClick(indexO,index)">
+            <div class="thenderIcon"
+                 v-if="defThunderArr[indexO][index].thunderid===-1"></div>
+            <div v-else>{{defThunderArr[indexO][index].thunderid}}</div>
+            <!-- 上层遮罩 -->
+            <div class="cover-box"
+                 :class="{'flagStyle':defThunderArr[indexO][index].signStyle}"
+                 @contextmenu.prevent.stop='rightClick($event,indexO,index)'
+                 v-if="defThunderArr[indexO][index].coverShow"></div>
+          </div>
         </div>
+      </div>
+      <div class="game-popup flexbox "
+           v-if="gameOver">
+        <p>{{coverContent}}</p>
+        <p class="re-begion"
+           @click="reloadBegion">重新开始</p>
       </div>
     </div>
   </div>
@@ -34,7 +43,17 @@ export default {
       coverHiddenArr: [],
       row: 10,
       col: 10,
-      click: 0
+      click: 0,
+      // 剩下地雷数 
+      hasThunderNum: 10,
+      // 默认展开的盒子数量（第一次点击展开的盒子）
+      showboxNum: 0,
+      // 地雷个数
+      thunderNum: 10,
+      // 当左键点击的是雷 就不用显示完成弹窗
+      overPopup: true,
+      gameOver: false,
+      coverContent: '恭喜获胜'
     }
   },
   watch: {
@@ -69,7 +88,13 @@ export default {
         let arr = []
         defThunder.push(arr)
         for (let c = 0; c < col; c++) {
-          let obj = { thunderid: 0, coverShow: true }
+          let obj = {
+            thunderid: 0,
+            // 默认遮罩层是否显示
+            coverShow: true,
+            // 标记样式是否显示
+            signStyle: false
+          }
           defThunder[r].push(obj)
         }
       }
@@ -158,6 +183,7 @@ export default {
     createThunder () {
       // 声明一个空数组保存数字 再将数组打乱 取出前10个数字
       let dataArr = []
+      this.thunerArr = []
       let totalNum = 100
       for (let i = 0; i < totalNum; i++) {
         dataArr.push(i)
@@ -179,13 +205,41 @@ export default {
       }
       return this.thunerArr
     },
+    // 单击事件
     thunderClick (x, y) {
       this.defThunderArr[x][y].coverShow = false
       this.otherShow(x, y)
+      let thunderNum = 0
+      thunderNum = this.showboxNum
+      this.defThunderArr.map((currentVal) => {
+        currentVal.map((curVal) => {
+          if (curVal.coverShow === false && curVal.thunderid !== -1) {
+            thunderNum++
+          }
+        })
+      })
+      if ((thunderNum + this.thunderNum) === (this.col * this.row)) {
+        if (this.overPopup) {
+          this.gameOver = true
+          this.coverContent = '恭喜获胜'
+        }
+        this.defThunderArr.map((cur) => {
+          cur.map((curi) => {
+            curi.coverShow = false
+          })
+        })
+      }
+      console.log(thunderNum, this.thunderNum);
     },
     otherShow (x, y) {
+      console.log('click');
+
       // 如果当前项是雷 则显示所有
       if (this.defThunderArr[x][y].thunderid === -1) {
+        this.overPopup = false
+        this.gameOver = true
+        this.coverContent = '你输了'
+        this.hasThunderNum = 10
         this.defThunderArr.map((cur) => {
           cur.map((curi) => {
             curi.coverShow = false
@@ -193,11 +247,10 @@ export default {
         })
       } else {
         if (this.click === 1) return
-        // 显示相邻的20个不为雷的格子 声明显示位置的xy坐标 
-        let showX = (x - 2) < 0 ? 0 : x
-        showX = (showX + 2) > this.row ? this.row : showX
-        let showY = (y - 2) < 0 ? 0 : y
-        showY = (showY + 3) > this.col ? this.col : showY
+        // 显示相邻的20个不为雷的格子 声明显示位置的xy坐标 x 4 y 5 展开位置从点击位置左移一位向下展开
+        let showX = (x - 1) < 0 ? 0 : x
+        showX = (showX + 2) > this.row ? (this.row - 4) : showX
+        let showY = (y + 5) > this.col ? this.col - 5 : y
         let isThunder = 0
         for (let x = showX; x < (showX + 4); x++) {
           for (let y = showY; y < (showY + 5); y++) {
@@ -208,7 +261,7 @@ export default {
             }
           }
         }
-
+        // 保证要有额外的显示
         isThunder = isThunder > 0 ? isThunder : isThunder + 3
         // if (isThunder > 0) {
         // 附加循环的x坐标
@@ -217,20 +270,40 @@ export default {
         // let addForY = 0
         for (let i = 0; i < isThunder; i++) {
           let elAddfor = this.defThunderArr[addForX][showY++]
-          if (elAddfor !== -1) {
+          if (elAddfor.thunderid !== -1) {
             elAddfor.coverShow = false
           } else {
             i = i - 1
           }
         }
+        console.log(this.showboxNum);
+
         // }
         // 只允许调用一次显示多个的事件
         this.click++
       }
     },
-    rightClick () {
-      console.log('右键');
+    // 右键标记
+    rightClick (e, x, y) {
+      e.preventDefault();
+      if (this.defThunderArr[x][y].signStyle === false) {
+        this.defThunderArr[x][y].signStyle = true
+        if (this.hasThunderNum !== 0) {
+          this.hasThunderNum--
+        }
+      } else if (this.defThunderArr[x][y].signStyle === true) {
+        this.defThunderArr[x][y].signStyle = false
+        if (this.hasThunderNum <= 10) {
+          this.hasThunderNum++
+        }
+      }
 
+    },
+    // 重新开始 
+    reloadBegion () {
+      this.onloadFunc()
+      this.click = 0
+      this.gameOver = false
     }
   }
 }
@@ -289,8 +362,22 @@ body,
   position: relative;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -70%);
   background-color: #fff;
+  .game-popup {
+    background: rgba(255, 255, 255, 0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .re-begion {
+      cursor: pointer;
+    }
+  }
   .innerbox {
     position: relative;
     width: 50px;
@@ -315,6 +402,10 @@ body,
       top: 0;
       left: 0;
       background-color: #ccc;
+      &.flagStyle {
+        background: url("./assets/旗子.svg") center center no-repeat #ccc;
+        background-size: 10px 10px;
+      }
     }
   }
 }
